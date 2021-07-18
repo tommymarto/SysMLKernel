@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "testSysMLKernel", "testSysMLKernel.csproj", "{279663B5-E3CF-41D9-A649-2C3FE9CD8554}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1597F6D1-99E5-437C-A3B7-C4BA208526A6} = {1597F6D1-99E5-437C-A3B7-C4BA208526A6}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SysML.Interactive", "..\SysML.Interactive\SysML.Interactive.csproj", "{1597F6D1-99E5-437C-A3B7-C4BA208526A6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{279663B5-E3CF-41D9-A649-2C3FE9CD8554}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{279663B5-E3CF-41D9-A649-2C3FE9CD8554}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{279663B5-E3CF-41D9-A649-2C3FE9CD8554}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{279663B5-E3CF-41D9-A649-2C3FE9CD8554}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1597F6D1-99E5-437C-A3B7-C4BA208526A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1597F6D1-99E5-437C-A3B7-C4BA208526A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1597F6D1-99E5-437C-A3B7-C4BA208526A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1597F6D1-99E5-437C-A3B7-C4BA208526A6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF7BD77D-4876-4926-AA9B-02C0B97F508A}
+	EndGlobalSection
+EndGlobal
