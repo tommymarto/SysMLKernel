@@ -1,4 +1,6 @@
-﻿using Microsoft.DotNet.Interactive.Commands;
+﻿using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -6,6 +8,7 @@ using Newtonsoft.Json.Serialization;
 using StreamJsonRpc;
 using SysML.Interactive;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,26 +22,8 @@ namespace testSysMLKernel
     {
         static async Task<int> Main(string[] args)
         {
-            //            var input = @"
-            //package BlockTest {
-            //    part f: A;
-            //    public block A {
-            //        part b: B;
-            //        public port c: C;
-            //    }
-            //    abstract block B {
-            //        public abstract part a: A;
-            //        port x: ~C;
-            //        package P { }
-            //    }
-            //    private port def C {
-            //        private in ref y: A, B;
-            //        import y as z1;
-            //        alias y as z2;
-            //    }
-            //}";
-
             var input = @"
+#!sysml
 package 'Part Definition Example' {
 	import ScalarValues::*;
 	
@@ -61,37 +46,7 @@ package 'Part Definition Example' {
 }
 ";
 
-            //var inputA = @"{""issues"":[],""syntaxErrors"":[],""semanticErrors"":[],""warnings"":[],""content"":{""name"":""BlockTest"",""kind"":""PACKAGE"",""ownedElements"":[""f"",""A"",""B"",""C""]}}";
-
-
-            // SYSTEM.TEXT.JSON
-
-            //var x = JsonSerializer.Deserialize<SysMLInteractiveResult>(inputA, new JsonSerializerOptions()
-            //{
-            //    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            //    Converters =
-            //    {
-            //        new JsonStringEnumConverter()
-            //    }
-            //});
-
-
-            // NEWTONSOFT
-
-            //var x = new JsonSerializer()
-            //{
-            //    ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            //    Converters =
-            //    {
-            //        new StringEnumConverter()
-            //    }
-            //};
-
-            //using TextReader sr = new StringReader(inputA);
-            //SysMLInteractiveResult sysMLInteractiveResult = x.Deserialize<SysMLInteractiveResult>(new JsonTextReader(sr));
-
-
-            // RPC FROM PROCESS
+            // WITHOUT KERNEL
 
             //var psi = new ProcessStartInfo
             //{
@@ -129,10 +84,36 @@ package 'Part Definition Example' {
 
             // KERNEL
 
-            var kernel = new SysMLKernel("SysML");
-            var kernelCommandResult = await kernel.SendAsync(new SubmitCode(input), System.Threading.CancellationToken.None);
-            var x = kernel.LastSubmissionResult;
-            var y = kernel.LastSubmissionSvg;
+            var compositeKernel = new CompositeKernel().UseSysML();
+
+            //var compositeKernel = Kernel.Root as CompositeKernel;
+
+            var errorMessage = string.Empty;
+            ReturnValueProduced returnValue = null;
+            var displayedValues = new List<DisplayedValueProduced>();
+
+            compositeKernel.KernelEvents.Subscribe(e =>
+            {
+                switch(e)
+                {
+                    case CommandFailed cf:
+                        {
+                            errorMessage = cf.Message;
+                        }
+                        break;
+                    case ReturnValueProduced rvp:
+                        {
+                            returnValue = rvp;
+                        }
+                        break;
+                    case DisplayedValueProduced dvp:
+                        {
+                            displayedValues.Add(dvp);
+                        }
+                        break;
+                }
+            });
+            var kernelCommandResult = await compositeKernel.SendAsync(new SubmitCode(input), System.Threading.CancellationToken.None);
 
             return 0;
         }

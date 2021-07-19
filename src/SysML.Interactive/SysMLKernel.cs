@@ -1,10 +1,16 @@
-﻿using Microsoft.DotNet.Interactive;
+﻿using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+
+
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace SysML.Interactive
 {
@@ -13,12 +19,10 @@ namespace SysML.Interactive
         IKernelCommandHandler<SubmitCode>
     {
         private SysMLRpcClient SysMLRpcClient { get; set; }
-        private Process SysMLProcess { get; set; }
-        public SysMLInteractiveResult LastSubmissionResult { get; private set; }
-        public string LastSubmissionSvg { get; private set; }
 
-        public SysMLKernel(string name) : base(name)
+        public SysMLKernel() : base("sysml")
         {
+
             var psi = new ProcessStartInfo
             {
                 FileName = "java",
@@ -29,23 +33,30 @@ namespace SysML.Interactive
                 UseShellExecute = false,
             };
 
-            SysMLProcess = new Process { StartInfo = psi, EnableRaisingEvents = true };
+            var SysMLProcess = new Process { StartInfo = psi, EnableRaisingEvents = true };
+            RegisterForDisposal(() =>
+            {
+                SysMLRpcClient = null;
+                SysMLProcess.Kill(true);
+                SysMLProcess.Dispose();
+            });
+
             SysMLProcess.Start();
-            SetProcessEventHandlers();
+            SetProcessEventHandlers(SysMLProcess);
 
             SysMLRpcClient = new(SysMLProcess.StandardInput.BaseStream, SysMLProcess.StandardOutput.BaseStream);
         }
 
-        private void SetProcessEventHandlers()
+        private void SetProcessEventHandlers(Process SysMLProcess)
         {
             SysMLProcess.Exited += (o, args) =>
             {
-                Console.WriteLine("process exited");
+                SysMLRpcClient = null;
             };
 
             SysMLProcess.ErrorDataReceived += (o, args) =>
             {
-                Console.WriteLine(args.Data);
+                KernelInvocationContext.Current?.Publish(new ErrorProduced( args.Data, KernelInvocationContext.Current?.Command));
             };
             SysMLProcess.BeginErrorReadLine();
         }
@@ -53,19 +64,59 @@ namespace SysML.Interactive
         public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
         {
             var result = await SysMLRpcClient.EvalAsync(submitCode.Code);
-            LastSubmissionResult = result;
 
-            var sumbittedItems = LastSubmissionResult.Content.Select(c => c.Name);
-            var svg = await SysMLRpcClient.GetSvgAsync(sumbittedItems, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
-            LastSubmissionSvg = svg;
+            var errors = result.SyntaxErrors.Concat(result.SemanticErrors).ToList();
 
+            if (errors.Count > 0)
+            {
+                var errorMessage = new StringBuilder();
+                foreach(var error in errors.Select(e => e.Message))
+                {
+                    errorMessage.AppendLine(error);
+                }
+
+                context.Fail(message: errorMessage.ToString());
+                return;
+            }
+
+            var sumbittedItems = result.Content.Select(c => c.Name);
+            var svgText = await SysMLRpcClient.GetSvgAsync(sumbittedItems, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
+            var svg = new SysMLSvg(svgText);
+
+            context.Display(svg, HtmlFormatter.MimeType);
             context.Publish(new ReturnValueProduced(result, submitCode, FormattedValue.FromObject(result)));
+
+        }
+    }
+
+    public class SysMLSvg
+    {
+        public SysMLSvg(string svg)
+        {
+            Svg = svg;
         }
 
-        public new void Dispose()
+        public string Svg { get; }
+    }
+
+    public static class SysMLKernelExtension
+    {
+        public static CompositeKernel UseSysML(this CompositeKernel kernel)
         {
-            SysMLProcess.Kill(true);
-            base.Dispose();
+            var sysMLKernel = new SysMLKernel();
+            kernel.Add(sysMLKernel);
+
+            RegisterFormatters();
+            return kernel;
+        }
+
+        public static void RegisterFormatters()
+        {
+            Formatter.Register<SysMLSvg>((value, writer) =>
+            {
+                var html = div(new HtmlString(value.Svg));
+                writer.Write(html);
+            }, HtmlFormatter.MimeType);
         }
     }
 }

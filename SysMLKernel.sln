@@ -10,8 +10,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "testSysMLKernel", "src\test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SysML.Interactive", "src\SysML.Interactive\SysML.Interactive.csproj", "{1597F6D1-99E5-437C-A3B7-C4BA208526A6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A06EFC85-D102-4002-B909-56B83BBBA86C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{279663B5-E3CF-41D9-A649-2C3FE9CD8554} = {A06EFC85-D102-4002-B909-56B83BBBA86C}
-		{1597F6D1-99E5-437C-A3B7-C4BA208526A6} = {A06EFC85-D102-4002-B909-56B83BBBA86C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BF7BD77D-4876-4926-AA9B-02C0B97F508A}
